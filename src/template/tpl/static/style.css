@@ -1,0 +1,7 @@
+body {
+    max-width: 600px;
+    margin: 0 auto;
+    
+    text-align: justify;
+    font: 1em sans-serif;
+}
