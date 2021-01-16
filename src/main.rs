@@ -1,10 +1,18 @@
 use comrak::{markdown_to_html, ComrakOptions};
+use serde::Serialize;
 use std::{ffi::OsStr, fs, path::Path, process::exit};
+use tinytemplate::TinyTemplate;
 use walkdir::WalkDir;
 
 #[macro_use]
 extern crate clap;
 use clap::App;
+
+#[derive(Serialize)]
+struct Context {
+    title: String,
+    content: String,
+}
 
 fn new(name: &str) {
     let path = Path::new(name);
@@ -51,12 +59,57 @@ fn gen() {
     }
 
     let src_path = root_path.join("src");
+    let tpl_path = root_path.join("tpl");
     let out_path = root_path.join("out");
 
     /* Create output directory. */
     if !out_path.exists() {
         fs::create_dir(&out_path).expect("Failed to create 'out' directory.");
     }
+
+    /* Copy all static files from template. */
+    let static_tpl_path = tpl_path.join("static");
+    let static_out_path = out_path.join("static");
+    if !static_out_path.exists() {
+        fs::create_dir(&static_out_path)
+            .expect("Failed to create 'static' directory.");
+    }
+    for entry in WalkDir::new(&static_tpl_path)
+        .follow_links(true)
+        .into_iter()
+        .filter_map(|e| e.ok())
+    {
+        let static_tpl_file = entry.path();
+        let static_out_file =
+            out_path.join(static_tpl_file.strip_prefix(&tpl_path).unwrap());
+
+        println!("tpl file: {}", static_tpl_file.to_str().unwrap());
+        println!("out file: {}", static_out_file.to_str().unwrap());
+
+        if static_tpl_file.is_dir() {
+            if !static_out_file.exists() {
+                fs::create_dir(&static_out_file)
+                    .expect("Failed to create a directory.");
+            }
+            continue;
+        }
+
+        fs::copy(static_tpl_file, static_out_file)
+            .expect("Failed to copy a file.");
+    }
+
+    // /* Read the html template */
+    // let html_template: &str = String::from_utf8_lossy(
+    //     &fs::read(tpl_path.join("template.html")).expect("Failed to read 'template.html' file."),
+    // )
+    // .parse().unwrap().as_str().unwrap();
+    let html_template = fs::read_to_string(tpl_path.join("template.html"))
+        .expect("Failed to read 'template.html' file.");
+
+    /* Load it in the template engine. */
+    let mut tt = TinyTemplate::new();
+    tt.set_default_formatter(&tinytemplate::format_unescaped);
+    tt.add_template("template", &html_template).unwrap();
 
     /* Walk through all source files. */
     for entry in WalkDir::new(&src_path)
@@ -86,7 +139,14 @@ fn gen() {
         let markdown =
             fs::read_to_string(md_path).expect("Markdown file not found.");
         let html = markdown_to_html(&markdown, &ComrakOptions::default());
-        fs::write(html_path, html).expect("Failed to write html file.");
+
+        let context = Context {
+            title: "Hello, world!".to_string(),
+            content: html,
+        };
+
+        let rendered = tt.render("template", &context).unwrap();
+        fs::write(html_path, rendered).expect("Failed to write html file.");
     }
 }
 
