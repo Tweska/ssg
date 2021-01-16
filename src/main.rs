@@ -94,7 +94,7 @@ fn create_template(path: &str) {
     let path = Path::new(path);
     let tpl_gi = std::include_str!("template/.gitignore");
     let tpl_md = std::include_str!("template/src/index.md");
-    let tpl_html = std::include_str!("template/tpl/index.html");
+    let tpl_html = std::include_str!("template/tpl/template.html");
     let tpl_css = std::include_str!("template/tpl/static/style.css");
 
     fs::write(path.join(".gitignore"), tpl_gi)
@@ -107,8 +107,8 @@ fn create_template(path: &str) {
 
     fs::create_dir(path.join("tpl"))
         .expect("Failed to create 'tpl' directory.");
-    fs::write(path.join("tpl/index.html"), tpl_html)
-        .expect("Failed to write 'index.html' file.");
+    fs::write(path.join("tpl/template.html"), tpl_html)
+        .expect("Failed to write 'template.html' file.");
 
     fs::create_dir(path.join("tpl/static"))
         .expect("Failed to create 'static' directory.");
