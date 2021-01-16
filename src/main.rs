@@ -10,7 +10,6 @@ use clap::App;
 
 #[derive(Serialize)]
 struct Context {
-    title: String,
     content: String,
 }
 
@@ -83,9 +82,6 @@ fn gen() {
         let static_out_file =
             out_path.join(static_tpl_file.strip_prefix(&tpl_path).unwrap());
 
-        println!("tpl file: {}", static_tpl_file.to_str().unwrap());
-        println!("out file: {}", static_out_file.to_str().unwrap());
-
         if static_tpl_file.is_dir() {
             if !static_out_file.exists() {
                 fs::create_dir(&static_out_file)
@@ -141,7 +137,6 @@ fn gen() {
         let html = markdown_to_html(&markdown, &ComrakOptions::default());
 
         let context = Context {
-            title: "Hello, world!".to_string(),
             content: html,
         };
 
