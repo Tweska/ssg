@@ -1,5 +1,5 @@
 use std::{
-    fs::{canonicalize, copy, create_dir_all, write},
+    fs::{canonicalize, create_dir_all, write},
     include_str,
     io::Result,
     path::Path,
@@ -18,43 +18,27 @@ pub fn find_root(path: &str) -> Result<String> {
     Ok(String::from(root.to_str().unwrap()))
 }
 
-pub fn recursive_copy(from: &str, to: &str) -> Result<()> {
-    let root_from = Path::new(from);
-    let root_to = Path::new(to);
-
-    for entry in root_from.read_dir()? {
-        let entry = entry?;
-        let from = entry.path();
-        let to = root_to.join(&from.strip_prefix(&root_from).unwrap());
-
-        if from.is_dir() {
-            recursive_copy(&from.to_str().unwrap(), &to.to_str().unwrap())?;
-        } else {
-            create_dir_all(to.parent().unwrap())?;
-            copy(&from, &to)?;
-        }
-    }
-
-    Ok(())
-}
-
 pub fn create_template(path: &str) -> Result<()> {
     let path = Path::new(path);
-    let tpl_gi = include_str!("template/.gitignore");
-    let tpl_md = include_str!("template/src/index.md");
-    let tpl_html = include_str!("template/tpl/template.html");
-    let tpl_css = include_str!("template/tpl/static/style.css");
+    let mut content: &str;
 
-    write(path.join(".gitignore"), tpl_gi)?;
+    content = include_str!("template/.gitignore");
+    write(path.join(".gitignore"), content)?;
 
+    content = include_str!("template/README.md");
+    write(path.join("README.md"), content)?;
+
+    content = include_str!("template/src/index.md");
     create_dir_all(path.join("src"))?;
-    write(path.join("src/index.md"), tpl_md)?;
+    write(path.join("src/index.md"), content)?;
 
+    content = include_str!("template/src/static/style.css");
+    create_dir_all(path.join("src/static"))?;
+    write(path.join("src/static/style.css"), content)?;
+
+    content = include_str!("template/tpl/template.html");
     create_dir_all(path.join("tpl"))?;
-    write(path.join("tpl/template.html"), tpl_html)?;
-
-    create_dir_all(path.join("tpl/static"))?;
-    write(path.join("tpl/static/style.css"), tpl_css)?;
+    write(path.join("tpl/template.html"), content)?;
 
     Ok(())
 }

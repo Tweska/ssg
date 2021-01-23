@@ -1,7 +1,8 @@
 use comrak::{markdown_to_html, ComrakOptions};
 use serde::Serialize;
 use std::{
-    fs::{create_dir_all, read_to_string, write},
+    ffi::OsStr,
+    fs::{copy, create_dir_all, read_to_string, write},
     io::Result,
     path::Path,
 };
@@ -60,12 +61,8 @@ pub fn recursive_render(
     for entry in root_input.read_dir()? {
         let entry = entry?;
         let input = entry.path();
-        let output = root_output.join(
-            &input
-                .strip_prefix(&root_input)
-                .unwrap()
-                .with_extension("html"),
-        );
+        let output =
+            root_output.join(&input.strip_prefix(&root_input).unwrap());
 
         if input.is_dir() {
             recursive_render(
@@ -73,12 +70,15 @@ pub fn recursive_render(
                 &output.to_str().unwrap(),
                 &template,
             )?;
-        } else {
+        } else if input.extension().and_then(OsStr::to_str) == Some("md") {
             render_and_write(
                 input.to_str().unwrap(),
-                output.to_str().unwrap(),
+                output.with_extension("html").to_str().unwrap(),
                 template,
             )?;
+        } else {
+            create_dir_all(output.parent().unwrap())?;
+            copy(input, output)?;
         }
     }
 

@@ -1,5 +1,5 @@
 use super::{
-    filesystem::{create_template, find_root, recursive_copy},
+    filesystem::{create_template, find_root},
     markdown::recursive_render,
 };
 use clap::{load_yaml, App};
@@ -40,23 +40,14 @@ fn initialize() -> Result<()> {
 fn generate() -> Result<()> {
     let root = find_root(".")?;
     let root = Path::new(root.as_str());
-    let src = root.join("src");
-    let tpl = root.join("tpl");
-    let out = root.join("out");
-
-    /* Copy all static files from template. */
-    recursive_copy(
-        &tpl.join("static").to_str().unwrap(),
-        &out.join("static").to_str().unwrap(),
-    )?;
 
     /* Read the HTML template. */
-    let template = read_to_string(&tpl.join("template.html"))?;
+    let template = read_to_string(&root.join("tpl/template.html"))?;
 
     /* Recursive render. */
     recursive_render(
-        &src.to_str().unwrap(),
-        &out.to_str().unwrap(),
+        &root.join("src").to_str().unwrap(),
+        &root.join("out").to_str().unwrap(),
         &template,
     )?;
 
