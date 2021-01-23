@@ -3,13 +3,6 @@ version: "0.1.0"
 author: Kevin Nobel <kevin@2sk.nl>
 about: Static Site Generator
 subcommands:
-    - new:
-        about: Creates a new project
-        args:
-            - NAME:
-                help: Name of the new project
-                required: true
-                index: 1
     - init:
         about: Initialize a project in the current directory
     - gen:
