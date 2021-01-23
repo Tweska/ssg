@@ -1,10 +1,13 @@
+use super::{
+    filesystem::{create_template, find_root, recursive_copy},
+    markdown::recursive_render,
+};
 use clap::{load_yaml, App};
-use std::fs::read_to_string;
-use std::io::{Error, ErrorKind, Result};
-use std::path::Path;
-
-use super::filesystem::{create_template, find_root, recursive_copy};
-use super::markdown::recursive_render;
+use std::{
+    fs::read_to_string,
+    io::{Error, ErrorKind, Result},
+    path::Path,
+};
 
 pub fn cli() -> Result<()> {
     let yaml = load_yaml!("cli.yml");

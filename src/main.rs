@@ -1,7 +1,7 @@
-use std::io::Result;
-
 mod lib;
+
 use lib::commands::cli;
+use std::io::Result;
 
 fn main() -> Result<()> {
     cli()?;
