@@ -7,32 +7,99 @@ use std::{
     path::Path,
 };
 use tinytemplate::TinyTemplate;
+use yaml_rust::YamlLoader;
 
 #[derive(Serialize)]
 struct Context {
     content: String,
+    meta: Meta,
+    options: Options,
 }
 
-fn render(markdown: &str, template: &str) -> String {
-    let mut options = ComrakOptions::default();
+#[derive(Serialize)]
+struct Meta {
+    title: Option<String>,
+    author: Option<String>,
+    description: Option<String>,
+    language: Option<String>,
+}
 
-    options.extension.autolink = true;
-    options.extension.description_lists = true;
-    options.extension.footnotes = true;
-    options.extension.strikethrough = true;
-    options.extension.superscript = true;
-    options.extension.table = true;
-    options.render.unsafe_ = true;
+#[derive(Serialize)]
+struct Options {
+    publish: bool,
+}
+
+fn split_meta_and_content(markdown: &str) -> (String, String) {
+    let components: Vec<&str> = markdown.splitn(3, "---").collect();
+
+    if components[0] == "" && components.len() == 3 {
+        return (String::from(components[1]), String::from(components[2]));
+    }
+
+    (String::from(""), String::from(markdown))
+}
+
+fn as_string(s: &str) -> Option<String> {
+    Some(String::from(s))
+}
+
+fn parse_yaml(yaml: &str) -> (Meta, Options) {
+    let yaml = YamlLoader::load_from_str(yaml).unwrap();
+    let yaml = &yaml[0];
+
+    let title = &yaml["title"].as_str().and_then(as_string);
+    let author = &yaml["author"].as_str().and_then(as_string);
+    let description = &yaml["description"].as_str().and_then(as_string);
+    let language = &yaml["language"].as_str().and_then(as_string);
+
+    let publish = match &yaml["publish"].as_bool() {
+        Some(b) => b.clone(),
+        None => true,
+    };
+
+    (
+        Meta {
+            title: title.clone(),
+            author: author.clone(),
+            description: description.clone(),
+            language: language.clone(),
+        },
+        Options {
+            publish: publish,
+        },
+    )
+}
+
+fn render(markdown: &str, template: &str) -> Option<String> {
+    let mut md_options = ComrakOptions::default();
+
+    md_options.extension.autolink = true;
+    md_options.extension.description_lists = true;
+    md_options.extension.footnotes = true;
+    md_options.extension.strikethrough = true;
+    md_options.extension.superscript = true;
+    md_options.extension.table = true;
+    md_options.render.unsafe_ = true;
 
     let mut tt = TinyTemplate::new();
     tt.set_default_formatter(&tinytemplate::format_unescaped);
     tt.add_template("tpl", template).unwrap();
 
+    /* Extract YAML from file. */
+    let (yaml, markdown) = split_meta_and_content(markdown);
+    let (meta, options) = parse_yaml(yaml.as_str());
+
+    if !options.publish {
+        return None;
+    }
+
     let context = Context {
-        content: markdown_to_html(markdown, &options),
+        content: markdown_to_html(markdown.as_str(), &md_options),
+        meta: meta,
+        options: options,
     };
 
-    tt.render("tpl", &context).unwrap()
+    Some(tt.render("tpl", &context).unwrap())
 }
 
 fn render_and_write(input: &str, output: &str, template: &str) -> Result<()> {
@@ -41,7 +108,10 @@ fn render_and_write(input: &str, output: &str, template: &str) -> Result<()> {
 
     /* Read Markdown and render HTML. */
     let markdown = read_to_string(input)?;
-    let html = render(markdown.as_str(), template);
+    let html = match render(markdown.as_str(), template) {
+        Some(html) => html,
+        None => return Ok(())
+    };
 
     /* Write HTML to output file. */
     create_dir_all(output.parent().unwrap())?;

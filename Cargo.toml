@@ -10,5 +10,5 @@ edition = "2018"
 clap = {version = "2", features = ["yaml"]}
 comrak = "0.9"
 tinytemplate = "1"
-walkdir = "2"
 serde = { version = "1", features = ["derive"]}
+yaml-rust = "0.4"

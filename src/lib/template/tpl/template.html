@@ -1,10 +1,26 @@
 <!DOCTYPE html>
+{{ if meta.language }}
+<html lang="{meta.language}">
+{{ else }}
 <html lang="en">
+{{ endif}}
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
 
-        <title>SSG</title>
+        {{ if meta.title }}
+        <title>{meta.title}</title>
+        {{ else }}
+        <title>My awesome website!</title>
+        {{ endif }}
+
+        {{ if meta.author }}
+        <meta name="author" content="{meta.author}">
+        {{ endif }}
+
+        {{ if meta.description }}
+        <meta name="description" content="{meta.description}">
+        {{ endif }}
 
         <link rel="stylesheet" href="/static/style.css">
 
