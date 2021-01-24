@@ -64,9 +64,7 @@ fn parse_yaml(yaml: &str) -> (Meta, Options) {
             description: description.clone(),
             language: language.clone(),
         },
-        Options {
-            publish: publish,
-        },
+        Options { publish: publish },
     )
 }
 
@@ -110,7 +108,7 @@ fn render_and_write(input: &str, output: &str, template: &str) -> Result<()> {
     let markdown = read_to_string(input)?;
     let html = match render(markdown.as_str(), template) {
         Some(html) => html,
-        None => return Ok(())
+        None => return Ok(()),
     };
 
     /* Write HTML to output file. */
