@@ -44,6 +44,18 @@ fn as_string(s: &str) -> Option<String> {
 }
 
 fn parse_yaml(yaml: &str) -> (Meta, Options) {
+    if yaml == "" {
+        return (
+            Meta {
+                title: None,
+                author: None,
+                description: None,
+                language: None,
+            },
+            Options { publish: true },
+        );
+    }
+
     let yaml = YamlLoader::load_from_str(yaml).unwrap();
     let yaml = &yaml[0];
 
