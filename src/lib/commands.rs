@@ -15,8 +15,7 @@ pub fn cli() -> Result<()> {
 
     match matches.subcommand() {
         ("init", Some(_)) => initialize()?,
-        ("gen", Some(_)) => generate()?,
-        _ => {}
+        _                 => generate()?,
     }
 
     Ok(())

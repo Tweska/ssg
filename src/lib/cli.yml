@@ -5,5 +5,3 @@ about: Static Site Generator
 subcommands:
     - init:
         about: Initialize a project in the current directory
-    - gen:
-        about: Generate html
