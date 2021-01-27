@@ -134,6 +134,7 @@ pub fn recursive_render(
     input: &str,
     output: &str,
     template: &str,
+    ignore_unchanged: bool,
 ) -> Result<()> {
     let root_input = Path::new(input);
     let root_output = Path::new(output);
@@ -141,7 +142,7 @@ pub fn recursive_render(
     for entry in root_input.read_dir()? {
         let entry = entry?;
         let input = entry.path();
-        let output =
+        let mut output =
             root_output.join(&input.strip_prefix(&root_input).unwrap());
 
         if input.is_dir() {
@@ -149,11 +150,23 @@ pub fn recursive_render(
                 &input.to_str().unwrap(),
                 &output.to_str().unwrap(),
                 &template,
+                ignore_unchanged,
             )?;
-        } else if input.extension().and_then(OsStr::to_str) == Some("md") {
+            continue;
+        }
+
+        if input.extension().and_then(OsStr::to_str) == Some("md") {
+            output = output.with_extension("html");
+        }
+
+        if ignore_unchanged && output.exists() && output.metadata()?.modified()? > input.metadata()?.modified()? {
+            continue;
+        }
+        
+        if input.extension().and_then(OsStr::to_str) == Some("md") {
             render_and_write(
                 input.to_str().unwrap(),
-                output.with_extension("html").to_str().unwrap(),
+                output.to_str().unwrap(),
                 template,
             )?;
         } else {

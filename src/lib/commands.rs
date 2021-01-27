@@ -16,7 +16,7 @@ pub fn cli() -> Result<()> {
     if let Some(_) = matches.subcommand_matches("init") {
         initialize()?;
     } else {
-        generate()?;
+        generate(matches.is_present("ignore_unchanged"))?;
 
         if matches.is_present("clean") {
             clean()?;
@@ -41,7 +41,7 @@ fn initialize() -> Result<()> {
     Ok(())
 }
 
-fn generate() -> Result<()> {
+fn generate(ignore_unchanged: bool) -> Result<()> {
     let root = find_root(".")?;
     let root = Path::new(root.as_str());
 
@@ -53,6 +53,7 @@ fn generate() -> Result<()> {
         &root.join("src").to_str().unwrap(),
         &root.join("out").to_str().unwrap(),
         &template,
+        ignore_unchanged,
     )?;
 
     Ok(())

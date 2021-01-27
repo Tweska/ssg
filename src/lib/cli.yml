@@ -6,6 +6,9 @@ args:
     - clean:
         long: clean
         help: Remove leftover files for which the source no longer exists.
+    - ignore_unchanged:
+        long: ignore-unchanged
+        help: Do not update output if the source file is not updated since generation.
 subcommands:
     - init:
         about: Initialize a project in the current directory
