@@ -1,6 +1,6 @@
 use std::{
     ffi::OsStr,
-    fs::{canonicalize, create_dir_all, remove_dir, remove_file, write},
+    fs::{canonicalize, copy, create_dir_all, remove_dir, remove_file, write},
     include_str,
     io::Result,
     path::Path,
@@ -17,6 +17,41 @@ pub fn find_root(path: &str) -> Result<String> {
     }
 
     Ok(String::from(root.to_str().unwrap()))
+}
+
+pub fn copy_source(
+    input: &str,
+    output: &str,
+    ignore_unchanged: bool,
+) -> Result<()> {
+    let root_input = Path::new(input);
+    let root_output = Path::new(output);
+
+    for entry in root_input.read_dir()? {
+        let entry = entry?;
+        let input = entry.path();
+        let output =
+            root_output.join(&input.strip_prefix(&root_input).unwrap());
+
+        if input.is_dir() {
+            copy_source(
+                &input.to_str().unwrap(),
+                &output.to_str().unwrap(),
+                ignore_unchanged,
+            )?;
+        } else if input.extension().and_then(OsStr::to_str) == Some("md") {
+            if ignore_unchanged
+                && output.exists()
+                && output.metadata()?.modified()?
+                    > input.metadata()?.modified()?
+            {
+                continue;
+            }
+            copy(input, output)?;
+        }
+    }
+
+    Ok(())
 }
 
 pub fn clean_path(input: &str, output: &str) -> Result<()> {

@@ -1,5 +1,5 @@
 use super::{
-    filesystem::{clean_path, create_template, find_root},
+    filesystem::{clean_path, copy_source, create_template, find_root},
     markdown::recursive_render,
 };
 use clap::{load_yaml, App};
@@ -17,6 +17,10 @@ pub fn cli() -> Result<()> {
         initialize()?;
     } else {
         generate(matches.is_present("ignore_unchanged"))?;
+
+        if matches.is_present("include_source") {
+            include_source(matches.is_present("ignore_unchanged"))?;
+        }
 
         if matches.is_present("clean") {
             clean()?;
@@ -53,6 +57,19 @@ fn generate(ignore_unchanged: bool) -> Result<()> {
         &root.join("src").to_str().unwrap(),
         &root.join("out").to_str().unwrap(),
         &template,
+        ignore_unchanged,
+    )?;
+
+    Ok(())
+}
+
+fn include_source(ignore_unchanged: bool) -> Result<()> {
+    let root = find_root(".")?;
+    let root = Path::new(root.as_str());
+
+    copy_source(
+        &root.join("src").to_str().unwrap(),
+        &root.join("out").to_str().unwrap(),
         ignore_unchanged,
     )?;
 

@@ -9,6 +9,9 @@ args:
     - ignore_unchanged:
         long: ignore-unchanged
         help: Do not update output if the source file is not updated since generation.
+    - include_source:
+        long: include-source
+        help: Include the Markdown source file in the output.
 subcommands:
     - init:
         about: Initialize a project in the current directory
