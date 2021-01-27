@@ -13,3 +13,4 @@ comrak = "0.9"
 tinytemplate = "1"
 serde = { version = "1", features = ["derive"]}
 yaml-rust = "0.4"
+chrono = "0.4"

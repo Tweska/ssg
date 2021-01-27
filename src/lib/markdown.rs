@@ -1,3 +1,4 @@
+use chrono::prelude::{DateTime, Datelike, Timelike, Utc};
 use comrak::{markdown_to_html, ComrakOptions};
 use serde::Serialize;
 use std::{
@@ -22,6 +23,9 @@ struct Meta {
     author: Option<String>,
     description: Option<String>,
     language: Option<String>,
+    generation_date: String,
+    generation_time: String,
+    source: String,
 }
 
 #[derive(Serialize)]
@@ -43,7 +47,13 @@ fn as_string(s: &str) -> Option<String> {
     Some(String::from(s))
 }
 
-fn parse_yaml(yaml: &str) -> (Meta, Options) {
+fn parse_yaml(yaml: &str, filename: &str) -> (Meta, Options) {
+    let filename = format!("{}", filename);
+    let dt: DateTime<Utc> = Utc::now();
+    let date = format!("{:02}-{:02}-{:02}", dt.day(), dt.month(), dt.year());
+    let time =
+        format!("{:02}:{:02}:{:02}", dt.hour(), dt.minute(), dt.second());
+
     if yaml == "" {
         return (
             Meta {
@@ -51,6 +61,9 @@ fn parse_yaml(yaml: &str) -> (Meta, Options) {
                 author: None,
                 description: None,
                 language: None,
+                generation_date: date,
+                generation_time: time,
+                source: filename,
             },
             Options { publish: true },
         );
@@ -75,12 +88,15 @@ fn parse_yaml(yaml: &str) -> (Meta, Options) {
             author: author.clone(),
             description: description.clone(),
             language: language.clone(),
+            generation_date: date,
+            generation_time: time,
+            source: filename,
         },
         Options { publish: publish },
     )
 }
 
-fn render(markdown: &str, template: &str) -> Option<String> {
+fn render(markdown: &str, template: &str, filename: &str) -> Option<String> {
     let mut md_options = ComrakOptions::default();
 
     md_options.extension.autolink = true;
@@ -97,7 +113,7 @@ fn render(markdown: &str, template: &str) -> Option<String> {
 
     /* Extract YAML from file. */
     let (yaml, markdown) = split_meta_and_content(markdown);
-    let (meta, options) = parse_yaml(yaml.as_str());
+    let (meta, options) = parse_yaml(yaml.as_str(), filename);
 
     if !options.publish {
         return None;
@@ -118,7 +134,11 @@ fn render_and_write(input: &str, output: &str, template: &str) -> Result<()> {
 
     /* Read Markdown and render HTML. */
     let markdown = read_to_string(input)?;
-    let html = match render(markdown.as_str(), template) {
+    let html = match render(
+        markdown.as_str(),
+        template,
+        input.file_name().unwrap().to_str().unwrap(),
+    ) {
         Some(html) => html,
         None => return Ok(()),
     };
@@ -159,10 +179,13 @@ pub fn recursive_render(
             output = output.with_extension("html");
         }
 
-        if ignore_unchanged && output.exists() && output.metadata()?.modified()? > input.metadata()?.modified()? {
+        if ignore_unchanged
+            && output.exists()
+            && output.metadata()?.modified()? > input.metadata()?.modified()?
+        {
             continue;
         }
-        
+
         if input.extension().and_then(OsStr::to_str) == Some("md") {
             render_and_write(
                 input.to_str().unwrap(),
