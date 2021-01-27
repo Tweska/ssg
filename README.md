@@ -18,6 +18,14 @@ initial project using `ssg`. All the Markdown source files live in the `src`
 directory and the template file is at `tpl/template.html`. The generated website
 will end up in the `out` directory.
 
+## Advanced Options
+The following options are available when generating your static site:
+```
+--clean: Remove leftover files for which the source no longer exists.
+--ignore-unchanged: Do not update output if the source file is not updated since generation.
+--include-source: Include the Markdown source file in the output.
+```
+
 ## Where is SSG used?
 I currently use SSG to generate [my own static site][3].
 
