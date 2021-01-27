@@ -1,5 +1,5 @@
 use super::{
-    filesystem::{create_template, find_root},
+    filesystem::{clean_path, create_template, find_root},
     markdown::recursive_render,
 };
 use clap::{load_yaml, App};
@@ -13,9 +13,14 @@ pub fn cli() -> Result<()> {
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).get_matches();
 
-    match matches.subcommand() {
-        ("init", Some(_)) => initialize()?,
-        _                 => generate()?,
+    if let Some(_) = matches.subcommand_matches("init") {
+        initialize()?;
+    } else {
+        generate()?;
+
+        if matches.is_present("clean") {
+            clean()?;
+        }
     }
 
     Ok(())
@@ -48,6 +53,18 @@ fn generate() -> Result<()> {
         &root.join("src").to_str().unwrap(),
         &root.join("out").to_str().unwrap(),
         &template,
+    )?;
+
+    Ok(())
+}
+
+fn clean() -> Result<()> {
+    let root = find_root(".")?;
+    let root = Path::new(root.as_str());
+
+    clean_path(
+        &root.join("src").to_str().unwrap(),
+        &root.join("out").to_str().unwrap(),
     )?;
 
     Ok(())

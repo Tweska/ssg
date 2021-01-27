@@ -2,6 +2,10 @@ name: ssg
 version: "0.1.0"
 author: Kevin Nobel <kevin@2sk.nl>
 about: Static Site Generator
+args:
+    - clean:
+        long: clean
+        help: Remove leftover files for which the source no longer exists.
 subcommands:
     - init:
         about: Initialize a project in the current directory
